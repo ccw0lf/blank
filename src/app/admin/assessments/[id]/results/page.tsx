@@ -1,0 +1,133 @@
+import Link from "next/link";
+import { prisma } from "@/lib/db";
+import { finalizeExpired } from "@/lib/quiz";
+import { cn, fmtDate, pct } from "@/lib/utils";
+import { deleteAttemptAction } from "@/app/actions/admin";
+import { SubmitButton } from "@/components/SubmitButton";
+
+export default async function ResultsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
+}) {
+  const { id } = await params;
+  const { q, status } = await searchParams;
+  await finalizeExpired({ assessmentId: id });
+
+  const attempts = await prisma.attempt.findMany({
+    where: {
+      assessmentId: id,
+      ...(q ? { user: { OR: [{ name: { contains: q } }, { email: { contains: q } }] } } : {}),
+      ...(status === "passed" ? { passed: true } : status === "failed" ? { passed: false } : status === "progress" ? { status: "IN_PROGRESS" } : {}),
+    },
+    include: { user: { select: { name: true, email: true, department: true } } },
+    orderBy: [{ submittedAt: "desc" }, { startedAt: "desc" }],
+  });
+
+  // Per-question difficulty analysis
+  const rows = await prisma.attemptQuestion.findMany({
+    where: { attempt: { assessmentId: id, status: "SUBMITTED" } },
+    select: { questionId: true, isCorrect: true, selectedIndex: true, question: { select: { text: true } } },
+  });
+  const perQ = new Map<string, { text: string; total: number; right: number; skipped: number }>();
+  for (const r of rows) {
+    const e = perQ.get(r.questionId) ?? { text: r.question.text, total: 0, right: 0, skipped: 0 };
+    e.total++;
+    if (r.isCorrect) e.right++;
+    if (r.selectedIndex === null) e.skipped++;
+    perQ.set(r.questionId, e);
+  }
+  const hardest = [...perQ.values()].sort((a, b) => a.right / a.total - b.right / b.total).slice(0, 10);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <form className="flex flex-wrap gap-2">
+          <input name="q" defaultValue={q} placeholder="Search name or email" className="input w-56" />
+          <select name="status" defaultValue={status ?? ""} className="input w-40">
+            <option value="">All</option>
+            <option value="passed">Passed</option>
+            <option value="failed">Failed</option>
+            <option value="progress">In progress</option>
+          </select>
+          <button className="btn-secondary">Filter</button>
+        </form>
+        <a href={`/api/admin/assessments/${id}/export`} className="btn-primary">Export CSV</a>
+      </div>
+
+      <div className="card overflow-x-auto p-0">
+        <table className="table">
+          <thead>
+            <tr><th>Participant</th><th>Attempt</th><th>Started</th><th>Submitted</th><th>Score</th><th>Result</th><th /></tr>
+          </thead>
+          <tbody>
+            {attempts.length === 0 && <tr><td colSpan={7} className="py-10 text-center text-slate-500">No attempts found.</td></tr>}
+            {attempts.map((a) => (
+              <tr key={a.id}>
+                <td>
+                  <p className="font-medium">{a.user.name}</p>
+                  <p className="text-xs text-slate-500">{a.user.email}{a.user.department ? ` · ${a.user.department}` : ""}</p>
+                </td>
+                <td>#{a.attemptNo}</td>
+                <td className="whitespace-nowrap text-slate-500">{fmtDate(a.startedAt)}</td>
+                <td className="whitespace-nowrap text-slate-500">{fmtDate(a.submittedAt)}</td>
+                <td className="tabular-nums">{a.status === "SUBMITTED" ? `${a.score}/${a.total} (${pct(a.percent)})` : "—"}</td>
+                <td>
+                  {a.status !== "SUBMITTED" ? (
+                    <span className="badge bg-sky-100 text-sky-800">In progress</span>
+                  ) : a.passed ? (
+                    <span className="badge bg-emerald-100 text-emerald-800">Passed</span>
+                  ) : (
+                    <span className="badge bg-red-100 text-red-800">Failed</span>
+                  )}
+                </td>
+                <td>
+                  <div className="flex justify-end gap-2">
+                    {a.status === "SUBMITTED" && (
+                      <Link href={`/attempt/${a.id}/result`} className="btn-secondary btn-sm">Review</Link>
+                    )}
+                    <form action={deleteAttemptAction}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <SubmitButton className="btn-secondary btn-sm text-red-600" confirm={`Delete this attempt? ${a.user.name} will get the attempt back and can retake the test.`}>
+                        Reset
+                      </SubmitButton>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <section className="card">
+        <h2 className="font-semibold">Question difficulty</h2>
+        <p className="text-sm text-slate-600">Questions with the lowest correct-answer rate. They may need to be covered again in training, or reworded.</p>
+        {hardest.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500">No data yet.</p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {hardest.map((h, i) => {
+              const rate = (h.right / h.total) * 100;
+              return (
+                <div key={i}>
+                  <div className="flex justify-between gap-4 text-sm">
+                    <span className="truncate">{h.text}</span>
+                    <span className="whitespace-nowrap text-slate-500 tabular-nums">
+                      {pct(rate)} correct · {h.total} answered{h.skipped ? ` · ${h.skipped} skipped` : ""}
+                    </span>
+                  </div>
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className={cn("h-full", rate < 40 ? "bg-red-500" : rate < 70 ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${rate}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

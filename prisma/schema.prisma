@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SQLite for zero-config local use. For production switch provider to
+// "postgresql" (or "mysql") and point DATABASE_URL at your server.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("USER") // "USER" | "ADMIN"
+  department   String?
+  createdAt    DateTime  @default(now())
+  attempts     Attempt[]
+}
+
+model Assessment {
+  id                  String     @id @default(cuid())
+  title               String
+  description         String?
+  trainingSession     String? // name / date of the training this quiz follows
+  slug                String     @unique
+  questionsPerAttempt Int        @default(10)
+  durationMinutes     Int? // null = no time limit
+  passPercent         Int        @default(60)
+  maxAttempts         Int        @default(1)
+  shuffleOptions      Boolean    @default(true)
+  showReview          Boolean    @default(true) // show correct answers after submit
+  isPublished         Boolean    @default(false)
+  startsAt            DateTime?
+  endsAt              DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  questions           Question[]
+  attempts            Attempt[]
+}
+
+model Question {
+  id           String            @id @default(cuid())
+  assessmentId String
+  assessment   Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  text         String
+  options      String // JSON string[]
+  correctIndex Int // index into options (original order)
+  explanation  String?
+  topic        String? // optional; the engine balances selection across topics
+  isActive     Boolean           @default(true)
+  timesServed  Int               @default(0) // exposure counter used by the engine
+  createdAt    DateTime          @default(now())
+  served       AttemptQuestion[]
+
+  @@index([assessmentId])
+}
+
+model Attempt {
+  id           String            @id @default(cuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessmentId String
+  assessment   Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  attemptNo    Int               @default(1)
+  status       String            @default("IN_PROGRESS") // "IN_PROGRESS" | "SUBMITTED"
+  setSignature String // hash of the sorted question ids, used to keep sets unique
+  startedAt    DateTime          @default(now())
+  deadline     DateTime?
+  submittedAt  DateTime?
+  score        Int?
+  total        Int
+  percent      Float?
+  passed       Boolean?
+  questions    AttemptQuestion[]
+
+  @@unique([userId, assessmentId, attemptNo])
+  @@index([assessmentId, setSignature])
+}
+
+model AttemptQuestion {
+  id            String   @id @default(cuid())
+  attemptId     String
+  attempt       Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId    String
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  position      Int
+  optionOrder   String // JSON number[]: displayed position -> original option index
+  selectedIndex Int? // original option index chosen by the student
+  isCorrect     Boolean?
+
+  @@unique([attemptId, questionId])
+  @@index([questionId])
+}
