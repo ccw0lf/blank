@@ -15,7 +15,7 @@ type Values = {
   questionsPerAttempt?: number;
   durationMinutes?: number | null;
   passPercent?: number;
-  maxAttempts?: number;
+  maxRetakes?: number | null;
   shuffleOptions?: boolean;
   showReview?: boolean;
   isPublished?: boolean;
@@ -70,8 +70,9 @@ export function AssessmentForm({ initial, poolSize }: { initial?: Values; poolSi
             <input id="pass" name="passPercent" type="number" min={0} max={100} className="input" required defaultValue={v.passPercent ?? 60} />
           </div>
           <div>
-            <label className="label" htmlFor="max">Attempts allowed *</label>
-            <input id="max" name="maxAttempts" type="number" min={1} className="input" required defaultValue={v.maxAttempts ?? 1} />
+            <label className="label" htmlFor="max">Retakes allowed</label>
+            <input id="max" name="maxRetakes" type="number" min={0} className="input" defaultValue={editing ? (v.maxRetakes ?? "") : (v.maxRetakes ?? 1)} placeholder="Unlimited" />
+            <p className="mt-1 text-xs text-slate-500">Blank = unlimited · 0 = no retakes · 2 = up to 2 retakes after the first attempt</p>
           </div>
           <div>
             <label className="label" htmlFor="startsAt">Opens at</label>
@@ -84,7 +85,7 @@ export function AssessmentForm({ initial, poolSize }: { initial?: Values; poolSi
         </div>
         <div className="space-y-2 pt-2 text-sm">
           <Check name="shuffleOptions" defaultChecked={v.shuffleOptions ?? true} label="Shuffle answer options for each student" />
-          <Check name="showReview" defaultChecked={v.showReview ?? true} label="Show correct answers & explanations after submission" />
+          <Check name="showReview" defaultChecked={v.showReview ?? true} label="Show correct answers & explanations to students after they submit" />
           <Check name="isPublished" defaultChecked={v.isPublished ?? false} label="Published (students can open the link)" />
         </div>
       </section>

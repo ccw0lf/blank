@@ -84,7 +84,7 @@ async function main() {
         questionsPerAttempt: 10,
         durationMinutes: 15,
         passPercent: 60,
-        maxAttempts: 2,
+        maxRetakes: 1,
         isPublished: true,
         questions: {
           create: QUESTIONS.map(([text, options, correctIndex, explanation, topic]) => ({

@@ -7,6 +7,7 @@ export const adminNav: NavGroup[] = [
       { href: "/admin", label: "Overview", icon: "dashboard", exact: true },
       { href: "/admin/assessments", label: "Assessments", icon: "assessments" },
       { href: "/admin/users", label: "Users", icon: "users" },
+      { href: "/admin/reports", label: "Reports", icon: "reports" },
     ],
   },
   { label: "Shortcuts", items: [{ href: "/dashboard", label: "Participant view", icon: "eye" }] },

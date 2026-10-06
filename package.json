@@ -10,7 +10,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx --env-file=.env prisma/seed.ts",
     "setup": "prisma db push && tsx --env-file=.env prisma/seed.ts",
-    "engine:check": "tsx scripts/engine-check.ts"
+    "engine:check": "tsx scripts/engine-check.ts",
+    "retake:check": "tsx --conditions react-server --env-file=.env scripts/retake-check.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

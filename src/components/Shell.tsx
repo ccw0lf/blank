@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   ClipboardCheck,
   ClipboardList,
+  FileBarChart,
   Eye,
   History,
   LayoutDashboard,
@@ -27,6 +28,7 @@ const ICONS = {
   profile: UserCircle,
   eye: Eye,
   shield: ShieldCheck,
+  reports: FileBarChart,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS; exact?: boolean };
@@ -131,10 +133,10 @@ export function Shell({
 
   return (
     <div className="min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">{sidebar}</aside>
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block print:hidden">{sidebar}</aside>
 
       {/* mobile top bar + drawer */}
-      <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur lg:hidden print:hidden">
         <button
           onClick={() => setOpen(true)}
           className="grid h-9 w-9 cursor-pointer place-items-center rounded-lg text-slate-600 hover:bg-slate-100"
@@ -165,7 +167,7 @@ export function Shell({
         </div>
       )}
 
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 print:pl-0">
         <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>

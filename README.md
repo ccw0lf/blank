@@ -57,6 +57,17 @@ The engine warns you when the pool is too small. If the pool has the same number
 
 A sidebar layout with **Dashboard** (stats, score trend, pass-rate ring, recent results, what to do next), **Assessments** (every published quiz with progress, attempts left and best score), **My Results** (full history with filters, per-assessment progress and a score progression chart) and **Profile** (edit details, change password). Admins get the same sidebar layout with Overview, Assessments and Users.
 
+## Retakes and answer visibility
+
+Each assessment has two settings (Settings tab / create form):
+
+- **Retakes allowed**: leave **blank for unlimited**, `0` for no retakes, or a number such as `2` for up to 2 retakes after the first attempt. The limit is enforced on the server. Students see how many retakes they have taken (and have left) on the assessment page, the assessments list, their history and results. Admins see retakes per participant on each assessment's Results tab, plus totals on the Overview tab.
+- **Show correct answers to students**: when on, students see the correct answers and explanations after submitting. When off, they only see their score.
+
+## Reports (admin)
+
+**Admin → Reports** has five reports, filterable by assessment and date range, each with **CSV export** and **Print / PDF**: *Assessments* (participation, scores, pass rate, retakes), *Participants*, *Departments*, *Question analysis* (correct rate and most common wrong answer) and *Retakes* (first vs best vs latest score).
+
 ## Other features
 
 - Role-based auth (bcrypt-hashed passwords, signed HTTP-only JWT cookie). Admins can promote other users.

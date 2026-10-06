@@ -52,3 +52,25 @@ export function fmtDuration(from: Date, to: Date | null) {
   const m = Math.floor(s / 60);
   return m >= 1 ? `${m} min` : `${s} sec`;
 }
+
+/**
+ * Retake rules. `maxRetakes` null = unlimited, N = N retakes after the first attempt
+ * (so N + 1 attempts in total). `attemptsUsed` counts every attempt started.
+ */
+export function retakeStatus(maxRetakes: number | null, attemptsUsed: number) {
+  const taken = Math.max(0, attemptsUsed - 1);
+  const unlimited = maxRetakes === null;
+  return {
+    taken,
+    unlimited,
+    /** retakes still available (null = unlimited) */
+    left: unlimited ? null : Math.max(0, maxRetakes - taken),
+    canStart: unlimited || attemptsUsed < maxRetakes + 1,
+    allowedLabel: unlimited ? "Unlimited" : String(maxRetakes),
+  };
+}
+
+export function retakeText(maxRetakes: number | null, attemptsUsed: number) {
+  const r = retakeStatus(maxRetakes, attemptsUsed);
+  return r.unlimited ? `${r.taken} taken · unlimited` : `${r.taken} of ${maxRetakes} used`;
+}

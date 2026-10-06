@@ -64,7 +64,7 @@ export default async function HistoryPage({
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <Stat label="Attempts" value={all.length} icon={<History />} tone="brand" hint={`${done.length} submitted`} />
+        <Stat label="Attempts" value={all.length} icon={<History />} tone="brand" hint={`${done.length} submitted · ${all.filter((a) => a.attemptNo > 1).length} retakes`} />
         <Stat label="Passed" value={passed} icon={<CheckCircle2 />} tone="green" hint={done.length ? `${pct((passed / done.length) * 100)} pass rate` : undefined} />
         <Stat label="Average" value={pct(avg)} icon={<Target />} tone="violet" />
         <Stat label="Best score" value={pct(best)} icon={<Award />} tone="amber" />
@@ -86,7 +86,7 @@ export default async function HistoryPage({
                   <li key={id}>
                     <div className="flex items-baseline justify-between gap-3 text-sm">
                       <Link href={`/history?assessment=${id}`} className="truncate font-medium hover:text-brand-600">{e.title}</Link>
-                      <span className="shrink-0 text-xs text-slate-500">{e.attempts.length} attempt{e.attempts.length > 1 ? "s" : ""} · best {pct(b)}</span>
+                      <span className="shrink-0 text-xs text-slate-500">{e.attempts.length} attempt{e.attempts.length > 1 ? "s" : ""} · {Math.max(0, Math.max(...e.attempts.map((x) => x.attemptNo)) - 1)} retake(s) · best {pct(b)}</span>
                     </div>
                     <div className="mt-1.5"><ProgressBar value={b} tone={b >= e.passMark ? "green" : "red"} /></div>
                   </li>
@@ -136,7 +136,7 @@ export default async function HistoryPage({
                       <p className="font-medium">{a.assessment.title}</p>
                       {a.assessment.trainingSession && <p className="text-xs text-slate-500">{a.assessment.trainingSession}</p>}
                     </td>
-                    <td className="text-slate-600">#{a.attemptNo}</td>
+                    <td className="whitespace-nowrap text-slate-600">#{a.attemptNo}{a.attemptNo > 1 && <span className="badge ml-2 bg-violet-50 text-violet-700 ring-1 ring-violet-200 ring-inset">Retake {a.attemptNo - 1}</span>}</td>
                     <td className="whitespace-nowrap text-slate-600">{fmtDate(a.submittedAt ?? a.startedAt)}</td>
                     <td className="whitespace-nowrap text-slate-600">{fmtDuration(a.startedAt, a.submittedAt)}</td>
                     <td>

@@ -15,7 +15,7 @@ function action(c: AssessmentCard) {
     case "available":
       return <Link href={`/a/${c.slug}`} className="btn-primary w-full"><PlayCircle size={16} /> Start assessment</Link>;
     case "retake":
-      return <Link href={`/a/${c.slug}`} className="btn-secondary w-full"><RotateCcw size={16} /> Retake</Link>;
+      return <Link href={`/a/${c.slug}`} className="btn-secondary w-full"><RotateCcw size={16} /> Retake{c.retakesLeft !== null ? ` (${c.retakesLeft} left)` : ""}</Link>;
     case "completed":
       return c.lastAttemptId ? <Link href={`/attempt/${c.lastAttemptId}/result`} className="btn-secondary w-full"><Trophy size={16} /> View result</Link> : null;
     default:
@@ -43,7 +43,7 @@ export default async function AssessmentsPage() {
         </ul>
         <div className="mt-4">
           <div className="mb-1 flex justify-between text-xs text-slate-500">
-            <span>Attempts {c.attemptsUsed}/{c.maxAttempts}</span>
+            <span className="flex items-center gap-1"><RotateCcw size={12} /> Retakes: {c.retakesAllowed === null ? `${c.retakesTaken} taken · unlimited` : c.retakesAllowed === 0 ? "not allowed" : `${c.retakesTaken} of ${c.retakesAllowed} used`}</span>
             {c.best != null && <span className={c.passed ? "font-medium text-emerald-600" : "font-medium text-slate-700"}>Best {pct(c.best)}</span>}
           </div>
           <ProgressBar value={c.best ?? 0} tone={c.best == null ? "brand" : c.passed ? "green" : "red"} />

@@ -29,9 +29,9 @@ model Assessment {
   questionsPerAttempt Int        @default(10)
   durationMinutes     Int? // null = no time limit
   passPercent         Int        @default(60)
-  maxAttempts         Int        @default(1)
+  maxRetakes          Int?       @default(0) // null = unlimited retakes; N = N retakes after the first attempt
   shuffleOptions      Boolean    @default(true)
-  showReview          Boolean    @default(true) // show correct answers after submit
+  showReview          Boolean    @default(true) // show correct answers & explanations to students after submit
   isPublished         Boolean    @default(false)
   startsAt            DateTime?
   endsAt              DateTime?

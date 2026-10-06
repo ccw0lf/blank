@@ -26,7 +26,7 @@ const assessmentSchema = z
     questionsPerAttempt: z.coerce.number().int().min(1, "At least 1 question per attempt.").max(500),
     durationMinutes: z.coerce.number().int().min(0).max(1440).optional(),
     passPercent: z.coerce.number().int().min(0).max(100),
-    maxAttempts: z.coerce.number().int().min(1).max(100),
+    maxRetakes: z.coerce.number().int().min(0, "Retakes can't be negative.").max(1000).optional(),
     startsAt: optionalDate,
     endsAt: optionalDate,
   })
@@ -34,7 +34,7 @@ const assessmentSchema = z
 
 function readAssessment(fd: FormData) {
   const raw = Object.fromEntries(fd) as Record<string, string>;
-  const parsed = assessmentSchema.safeParse({ ...raw, durationMinutes: raw.durationMinutes || undefined });
+  const parsed = assessmentSchema.safeParse({ ...raw, durationMinutes: raw.durationMinutes || undefined, maxRetakes: raw.maxRetakes?.trim() ? raw.maxRetakes : undefined });
   if (!parsed.success) return { error: parsed.error.issues[0].message } as const;
   const d = parsed.data;
   return {
@@ -45,7 +45,7 @@ function readAssessment(fd: FormData) {
       questionsPerAttempt: d.questionsPerAttempt,
       durationMinutes: d.durationMinutes || null,
       passPercent: d.passPercent,
-      maxAttempts: d.maxAttempts,
+      maxRetakes: d.maxRetakes ?? null, // blank = unlimited
       startsAt: d.startsAt,
       endsAt: d.endsAt,
       shuffleOptions: fd.get("shuffleOptions") === "on",
@@ -114,7 +114,7 @@ export async function duplicateAssessmentAction(fd: FormData) {
       questionsPerAttempt: src.questionsPerAttempt,
       durationMinutes: src.durationMinutes,
       passPercent: src.passPercent,
-      maxAttempts: src.maxAttempts,
+      maxRetakes: src.maxRetakes,
       shuffleOptions: src.shuffleOptions,
       showReview: src.showReview,
       isPublished: false,

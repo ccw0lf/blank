@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CheckCircle2, CircleSlash, FileText, Lightbulb, RotateCcw, Timer, Trophy, XCircle } from "lucide-react";
+import { CheckCircle2, CircleSlash, EyeOff, FileText, Lightbulb, RotateCcw, Timer, Trophy, XCircle } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { cn, fmtDate, fmtDuration, parseOptions, pct } from "@/lib/utils";
@@ -42,7 +42,7 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
         }
         eyebrow={viewingOther ? `${attempt.user.name} · ${attempt.user.email}` : undefined}
         title={attempt.assessment.title}
-        description={`Attempt ${attempt.attemptNo} · submitted ${fmtDate(attempt.submittedAt)}`}
+        description={`${attempt.attemptNo > 1 ? `Retake ${attempt.attemptNo - 1}` : "First attempt"} · submitted ${fmtDate(attempt.submittedAt)}`}
       />
 
       <section className="card overflow-hidden p-0">
@@ -133,7 +133,9 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
           })}
         </div>
       ) : (
-        <p className="mt-6 text-center text-sm text-slate-500">Detailed answer review is disabled for this assessment.</p>
+        <p className="card mt-6 flex items-center justify-center gap-2 text-center text-sm text-slate-500">
+          <EyeOff size={16} /> Correct answers aren&apos;t shown for this assessment. Your score is above.
+        </p>
       )}
     </div>
   );

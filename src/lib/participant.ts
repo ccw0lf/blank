@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "./db";
-import { availability } from "./utils";
+import { availability, retakeStatus } from "./utils";
 
 export type AssessmentCard = {
   id: string;
@@ -11,7 +11,9 @@ export type AssessmentCard = {
   questionCount: number;
   durationMinutes: number | null;
   passPercent: number;
-  maxAttempts: number;
+  retakesAllowed: number | null; // null = unlimited
+  retakesTaken: number;
+  retakesLeft: number | null; // null = unlimited
   attemptsUsed: number;
   best: number | null;
   passed: boolean;
@@ -42,11 +44,11 @@ export async function getAssessmentCards(userId: string): Promise<AssessmentCard
     const inProgress = mine.find((t) => t.status === "IN_PROGRESS");
     const best = submitted.length ? Math.max(...submitted.map((t) => t.percent ?? 0)) : null;
     const avail = availability(a);
-    const attemptsLeft = a.maxAttempts - mine.length;
+    const rt = retakeStatus(a.maxRetakes, mine.length);
     let state: AssessmentCard["state"];
     if (inProgress) state = "in_progress";
     else if (!avail.open && !submitted.length) state = "closed";
-    else if (attemptsLeft > 0 && avail.open && a._count.questions > 0) state = submitted.length ? "retake" : "available";
+    else if (rt.canStart && avail.open && a._count.questions > 0) state = submitted.length ? "retake" : "available";
     else state = submitted.length ? "completed" : "closed";
     return {
       id: a.id,
@@ -57,7 +59,9 @@ export async function getAssessmentCards(userId: string): Promise<AssessmentCard
       questionCount: Math.min(a.questionsPerAttempt, a._count.questions),
       durationMinutes: a.durationMinutes,
       passPercent: a.passPercent,
-      maxAttempts: a.maxAttempts,
+      retakesAllowed: a.maxRetakes,
+      retakesTaken: rt.taken,
+      retakesLeft: rt.left,
       attemptsUsed: mine.length,
       best,
       passed: submitted.some((t) => t.passed),

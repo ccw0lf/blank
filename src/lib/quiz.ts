@@ -2,7 +2,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { generateQuestionSet } from "./engine";
-import { availability, parseOptions } from "./utils";
+import { availability, parseOptions, retakeStatus } from "./utils";
 
 /** Answers arriving this long after the deadline (network lag) are still accepted. */
 const GRACE_MS = 30_000;
@@ -33,8 +33,12 @@ export async function startOrResumeAttempt(userId: string, assessmentId: string)
     where: { userId, assessmentId },
     select: { attemptNo: true, questions: { select: { questionId: true } } },
   });
-  if (previous.length >= assessment.maxAttempts)
-    throw new QuizError("You have used all your attempts for this assessment.");
+  if (!retakeStatus(assessment.maxRetakes, previous.length).canStart)
+    throw new QuizError(
+      assessment.maxRetakes === 0
+        ? "You have already completed this assessment. Retakes are not allowed."
+        : `You have used all ${assessment.maxRetakes} retake(s) for this assessment.`,
+    );
 
   // Retry on unique-constraint races (double click / two tabs).
   for (let tries = 0; tries < 3; tries++) {

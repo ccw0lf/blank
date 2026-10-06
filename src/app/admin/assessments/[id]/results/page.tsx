@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Download, Eye, Filter, RotateCcw, Search } from "lucide-react";
+import { Repeat } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { finalizeExpired } from "@/lib/quiz";
 import { cn, fmtDate, pct } from "@/lib/utils";
@@ -45,8 +46,56 @@ export default async function ResultsPage({
   }
   const hardest = [...perQ.values()].sort((a, b) => a.right / a.total - b.right / b.total).slice(0, 10);
 
+  const assessment = await prisma.assessment.findUniqueOrThrow({ where: { id }, select: { maxRetakes: true } });
+  const perUser = new Map<string, { name: string; email: string; attempts: number; best: number; submitted: number }>();
+  const everyone = await prisma.attempt.findMany({
+    where: { assessmentId: id },
+    select: { userId: true, status: true, percent: true, user: { select: { name: true, email: true } } },
+  });
+  for (const t of everyone) {
+    const e = perUser.get(t.userId) ?? { name: t.user.name, email: t.user.email, attempts: 0, best: 0, submitted: 0 };
+    e.attempts++;
+    if (t.status === "SUBMITTED") {
+      e.submitted++;
+      e.best = Math.max(e.best, t.percent ?? 0);
+    }
+    perUser.set(t.userId, e);
+  }
+  const participantRows = [...perUser.values()].sort((a, b) => b.attempts - a.attempts || a.name.localeCompare(b.name));
+  const totalRetakes = participantRows.reduce((s, u) => s + Math.max(0, u.attempts - 1), 0);
+
   return (
     <div className="space-y-6">
+      <section className="card overflow-hidden p-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-5 pt-5 pb-3">
+          <h2 className="flex items-center gap-2 font-semibold"><Repeat size={18} className="text-slate-400" /> Retakes by participant</h2>
+          <p className="text-sm text-slate-500">
+            {totalRetakes} retake{totalRetakes === 1 ? "" : "s"} taken · limit: {assessment.maxRetakes === null ? "unlimited" : assessment.maxRetakes === 0 ? "none" : `${assessment.maxRetakes} per student`}
+          </p>
+        </div>
+        <div className="max-h-72 overflow-auto">
+          <table className="table">
+            <thead><tr><th>Participant</th><th>Attempts</th><th>Retakes taken</th><th>Retakes left</th><th>Best score</th></tr></thead>
+            <tbody>
+              {participantRows.length === 0 && <tr><td colSpan={5} className="py-6 text-center text-slate-500">No participants yet.</td></tr>}
+              {participantRows.map((u) => {
+                const taken = Math.max(0, u.attempts - 1);
+                const left = assessment.maxRetakes === null ? "∞" : Math.max(0, assessment.maxRetakes - taken);
+                return (
+                  <tr key={u.email}>
+                    <td><p className="font-medium">{u.name}</p><p className="text-xs text-slate-500">{u.email}</p></td>
+                    <td className="tabular-nums">{u.attempts}</td>
+                    <td className="tabular-nums">{taken}</td>
+                    <td className="tabular-nums">{left}</td>
+                    <td className="tabular-nums">{u.submitted ? pct(u.best) : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <div className="flex flex-wrap items-end justify-between gap-3">
         <form className="flex flex-wrap gap-2">
           <div className="relative">
@@ -78,7 +127,7 @@ export default async function ResultsPage({
                   <p className="font-medium">{a.user.name}</p>
                   <p className="text-xs text-slate-500">{a.user.email}{a.user.department ? ` · ${a.user.department}` : ""}</p>
                 </td>
-                <td>#{a.attemptNo}</td>
+                <td className="whitespace-nowrap">#{a.attemptNo}{a.attemptNo > 1 && <span className="badge ml-2 bg-violet-50 text-violet-700 ring-1 ring-violet-200 ring-inset">Retake {a.attemptNo - 1}</span>}</td>
                 <td className="whitespace-nowrap text-slate-500">{fmtDate(a.startedAt)}</td>
                 <td className="whitespace-nowrap text-slate-500">{fmtDate(a.submittedAt)}</td>
                 <td className="tabular-nums">{a.status === "SUBMITTED" ? `${a.score}/${a.total} (${pct(a.percent)})` : "—"}</td>

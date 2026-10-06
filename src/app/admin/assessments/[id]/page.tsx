@@ -11,7 +11,7 @@ export default async function AssessmentOverview({ params }: { params: Promise<{
   const { id } = await params;
   await finalizeExpired({ assessmentId: id });
   const a = await prisma.assessment.findUniqueOrThrow({ where: { id } });
-  const [pool, submitted, inProgress, agg, passed, participants, topics] = await Promise.all([
+  const [pool, submitted, inProgress, agg, passed, participants, topics, retakes] = await Promise.all([
     prisma.question.count({ where: { assessmentId: id, isActive: true } }),
     prisma.attempt.count({ where: { assessmentId: id, status: "SUBMITTED" } }),
     prisma.attempt.count({ where: { assessmentId: id, status: "IN_PROGRESS" } }),
@@ -24,6 +24,7 @@ export default async function AssessmentOverview({ params }: { params: Promise<{
     prisma.attempt.count({ where: { assessmentId: id, status: "SUBMITTED", passed: true } }),
     prisma.attempt.groupBy({ by: ["userId"], where: { assessmentId: id } }),
     prisma.question.groupBy({ by: ["topic"], where: { assessmentId: id, isActive: true }, _count: { _all: true } }),
+    prisma.attempt.count({ where: { assessmentId: id, attemptNo: { gt: 1 } } }),
   ]);
 
   const k = a.questionsPerAttempt;
@@ -42,7 +43,7 @@ export default async function AssessmentOverview({ params }: { params: Promise<{
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat label="Participants" value={participants.length} icon={<Users />} tone="brand" hint={`${inProgress} currently taking it`} />
-        <Stat label="Submissions" value={submitted} icon={<CheckCircle2 />} tone="green" />
+        <Stat label="Submissions" value={submitted} icon={<CheckCircle2 />} tone="green" hint={`${retakes} retake${retakes === 1 ? "" : "s"} taken`} />
         <Stat label="Average score" value={pct(agg._avg.percent)} icon={<BarChart3 />} tone="violet" hint={submitted ? `min ${pct(agg._min.percent)} · max ${pct(agg._max.percent)}` : undefined} />
         <Stat label="Pass rate" value={submitted ? pct((passed / submitted) * 100) : "—"} icon={<Award />} tone="amber" hint={`pass mark ${a.passPercent}%`} />
       </div>
@@ -70,10 +71,10 @@ export default async function AssessmentOverview({ params }: { params: Promise<{
           <h2 className="flex items-center gap-2 font-semibold"><Settings2 size={18} className="text-slate-400" /> Configuration</h2>
           <Row k="Questions per student" v={`${k} of ${pool} active in the pool`} />
           <Row k="Time limit" v={a.durationMinutes ? `${a.durationMinutes} minutes` : "None"} />
-          <Row k="Attempts allowed" v={a.maxAttempts} />
+          <Row k="Retakes allowed" v={a.maxRetakes === null ? "Unlimited" : a.maxRetakes === 0 ? "None" : `${a.maxRetakes} per student`} />
           <Row k="Opens / closes" v={`${fmtDate(a.startsAt)} → ${fmtDate(a.endsAt)}`} />
           <Row k="Shuffle options" v={a.shuffleOptions ? "Yes" : "No"} />
-          <Row k="Answer review after submit" v={a.showReview ? "Yes" : "No"} />
+          <Row k="Show correct answers to students" v={a.showReview ? "Yes" : "No"} />
         </section>
       </div>
 

@@ -80,7 +80,7 @@ export default async function Dashboard() {
       )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Assessments taken" value={done.length} icon={<ClipboardCheck />} tone="brand" hint={`${running.length} in progress`} />
+        <Stat label="Assessments taken" value={done.length} icon={<ClipboardCheck />} tone="brand" hint={`${attempts.filter((a) => a.attemptNo > 1).length} retakes · ${running.length} in progress`} />
         <Stat label="Passed" value={passed} icon={<CheckCircle2 />} tone="green" hint={done.length ? `${done.length - passed} not passed` : undefined} />
         <Stat label="Average score" value={pct(avg)} icon={<Target />} tone="violet" />
         <Stat label="Best score" value={pct(best)} icon={<Award />} tone="amber" />
@@ -136,7 +136,7 @@ export default async function Dashboard() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{a.assessment.title}</p>
                       <p className="text-xs text-slate-500">
-                        Attempt #{a.attemptNo} · {fmtDate(a.submittedAt ?? a.startedAt)}
+                        {a.attemptNo > 1 ? `Retake ${a.attemptNo - 1}` : "First attempt"} · {fmtDate(a.submittedAt ?? a.startedAt)}
                       </p>
                     </div>
                     <span className="w-14 text-right text-sm font-semibold tabular-nums">
