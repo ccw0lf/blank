@@ -99,15 +99,15 @@ export default async function AssessmentLanding({ params }: { params: Promise<{ 
           <h2 className="flex items-center gap-2 px-5 pt-5 pb-3 font-semibold"><History size={18} className="text-slate-400" /> Your previous attempts</h2>
           <div className="overflow-x-auto">
             <table className="table">
-              <thead><tr><th>Attempt</th><th>Submitted</th><th>Score</th><th>Result</th><th /></tr></thead>
+              <thead><tr><th>Attempt</th><th>Submitted</th><th className="num">Score</th><th>Result</th><th className="act"><span className="sr-only">Actions</span></th></tr></thead>
               <tbody>
                 {submitted.map((a) => (
                   <tr key={a.id}>
                     <td>#{a.attemptNo}{a.attemptNo > 1 && <span className="badge ml-2 bg-violet-50 text-violet-700 ring-1 ring-violet-200 ring-inset">Retake {a.attemptNo - 1}</span>}</td>
                     <td className="whitespace-nowrap">{fmtDate(a.submittedAt)}</td>
-                    <td className="tabular-nums">{a.score}/{a.total} ({pct(a.percent)})</td>
+                    <td className="num">{a.score}/{a.total} ({pct(a.percent)})</td>
                     <td><StatusBadge status={a.status} passed={a.passed} /></td>
-                    <td className="text-right"><Link className="font-medium text-brand-600 hover:underline" href={`/attempt/${a.id}/result`}>View</Link></td>
+                    <td className="act"><Link className="font-medium text-brand-600 hover:underline" href={`/attempt/${a.id}/result`}>View</Link></td>
                   </tr>
                 ))}
               </tbody>

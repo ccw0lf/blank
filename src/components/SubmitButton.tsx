@@ -9,11 +9,13 @@ export function SubmitButton({
   pendingText,
   className = "btn-primary",
   confirm,
+  title,
 }: {
   children: React.ReactNode;
   pendingText?: string;
   className?: string;
   confirm?: string;
+  title?: string;
 }) {
   const status = useFormStatus();
   const ctxPending = useContext(PendingContext);
@@ -22,6 +24,8 @@ export function SubmitButton({
     <button
       type="submit"
       disabled={pending}
+      title={title}
+      aria-label={title}
       className={className}
       onClick={(e) => {
         if (confirm && !window.confirm(confirm)) e.preventDefault();

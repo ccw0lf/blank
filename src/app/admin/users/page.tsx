@@ -26,6 +26,12 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
     where: { status: "SUBMITTED", passed: true },
     _count: { _all: true },
   });
+  const taken = await prisma.attempt.findMany({
+    select: { userId: true, assessment: { select: { title: true } } },
+    distinct: ["userId", "assessmentId"],
+  });
+  const titlesByUser = new Map<string, string[]>();
+  for (const t of taken) titlesByUser.set(t.userId, [...(titlesByUser.get(t.userId) ?? []), t.assessment.title]);
   const sMap = new Map(stats.map((s) => [s.userId, s]));
   const pMap = new Map(passes.map((p) => [p.userId, p._count._all]));
 
@@ -47,9 +53,9 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
       <div className="card overflow-hidden p-0">
         {users.length === 0 ? <EmptyState icon={<Users />} title="No users found" /> : (
         <div className="overflow-x-auto">
-        <table className="table">
+        <table className="table compact">
           <thead>
-            <tr><th>Name</th><th>Department</th><th>Role</th><th>Assessments</th><th>Passed</th><th>Avg score</th><th>Joined</th><th /></tr>
+            <tr><th>Name</th><th>Department</th><th>Assessments taken</th><th className="num">Passed</th><th className="num">Avg score</th><th>Joined</th><th className="act"><span className="sr-only">Actions</span></th></tr>
           </thead>
           <tbody>
             {users.map((u) => {
@@ -62,30 +68,40 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                         {u.name.split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase()}
                       </span>
                       <div>
-                        <p className="font-medium">{u.name}</p>
+                        <p className="flex items-center gap-2 font-medium">{u.name}{u.role === "ADMIN" && <span className="badge bg-amber-50 text-amber-700 ring-1 ring-amber-200 ring-inset"><ShieldCheck size={12} /> Admin</span>}</p>
                         <p className="text-xs text-slate-500">{u.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="text-slate-600">{u.department ?? "—"}</td>
-                  <td>{u.role === "ADMIN" ? <span className="badge bg-amber-50 text-amber-700 ring-1 ring-amber-200 ring-inset"><ShieldCheck size={12} /> Admin</span> : <span className="badge bg-slate-100 text-slate-600 ring-1 ring-slate-200 ring-inset">User</span>}</td>
-                  <td className="tabular-nums">{s?._count._all ?? 0}</td>
-                  <td className="tabular-nums">{pMap.get(u.id) ?? 0}</td>
-                  <td className="tabular-nums">{pct(s?._avg.percent)}</td>
-                  <td className="whitespace-nowrap text-slate-500">{fmtDate(u.createdAt)}</td>
                   <td>
+                    {(titlesByUser.get(u.id) ?? []).length === 0 ? (
+                      <span className="text-slate-400">—</span>
+                    ) : (
+                      <div className="flex max-w-48 flex-wrap gap-1">
+                        {(titlesByUser.get(u.id) ?? []).slice(0, 2).map((t) => (
+                          <span key={t} className="badge bg-slate-100 text-slate-700 ring-1 ring-slate-200 ring-inset" title={t}>{t.length > 24 ? t.slice(0, 23) + "…" : t}</span>
+                        ))}
+                        {(titlesByUser.get(u.id) ?? []).length > 2 && <span className="badge bg-slate-50 text-slate-500">+{(titlesByUser.get(u.id) ?? []).length - 2} more</span>}
+                      </div>
+                    )}
+                  </td>
+                  <td className="num">{pMap.get(u.id) ?? 0}</td>
+                  <td className="num">{pct(s?._avg.percent)}</td>
+                  <td className="whitespace-nowrap text-slate-500">{u.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</td>
+                  <td className="act">
                     {u.id !== me.id && (
                       <div className="flex justify-end gap-2">
                         <form action={setRoleAction}>
                           <input type="hidden" name="id" value={u.id} />
                           <input type="hidden" name="role" value={u.role === "ADMIN" ? "USER" : "ADMIN"} />
-                          <SubmitButton className="btn-secondary btn-sm" confirm={u.role === "ADMIN" ? `Remove admin rights from ${u.name}?` : `Make ${u.name} an admin?`}>
-                            {u.role === "ADMIN" ? <><ShieldOff size={14} /> Make user</> : <><ShieldCheck size={14} /> Make admin</>}
+                          <SubmitButton className="btn-secondary btn-sm" title={u.role === "ADMIN" ? "Make user" : "Make admin"} confirm={u.role === "ADMIN" ? `Remove admin rights from ${u.name}?` : `Make ${u.name} an admin?`}>
+                            {u.role === "ADMIN" ? <><ShieldOff size={14} /> User</> : <><ShieldCheck size={14} /> Admin</>}
                           </SubmitButton>
                         </form>
                         <form action={deleteUserAction}>
                           <input type="hidden" name="id" value={u.id} />
-                          <SubmitButton className="btn-secondary btn-sm text-red-600" confirm={`Delete ${u.name} and all their results?`}><Trash2 size={14} /> Delete</SubmitButton>
+                          <SubmitButton className="btn-secondary btn-sm text-red-600" title="Delete user" confirm={`Delete ${u.name} and all their results?`}><Trash2 size={14} /></SubmitButton>
                         </form>
                       </div>
                     )}

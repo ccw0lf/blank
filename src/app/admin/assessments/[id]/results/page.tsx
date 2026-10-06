@@ -27,7 +27,7 @@ export default async function ResultsPage({
       ...(q ? { user: { OR: [{ name: { contains: q } }, { email: { contains: q } }] } } : {}),
       ...(status === "passed" ? { passed: true } : status === "failed" ? { passed: false } : status === "progress" ? { status: "IN_PROGRESS" } : {}),
     },
-    include: { user: { select: { name: true, email: true, department: true } } },
+    include: { user: { select: { name: true, email: true, department: true } }, assessment: { select: { title: true } } },
     orderBy: [{ submittedAt: "desc" }, { startedAt: "desc" }],
   });
 
@@ -75,7 +75,7 @@ export default async function ResultsPage({
         </div>
         <div className="max-h-72 overflow-auto">
           <table className="table">
-            <thead><tr><th>Participant</th><th>Attempts</th><th>Retakes taken</th><th>Retakes left</th><th>Best score</th></tr></thead>
+            <thead><tr><th>Participant</th><th className="num">Attempts</th><th className="num">Retakes taken</th><th className="num">Retakes left</th><th className="num">Best score</th></tr></thead>
             <tbody>
               {participantRows.length === 0 && <tr><td colSpan={5} className="py-6 text-center text-slate-500">No participants yet.</td></tr>}
               {participantRows.map((u) => {
@@ -84,10 +84,10 @@ export default async function ResultsPage({
                 return (
                   <tr key={u.email}>
                     <td><p className="font-medium">{u.name}</p><p className="text-xs text-slate-500">{u.email}</p></td>
-                    <td className="tabular-nums">{u.attempts}</td>
-                    <td className="tabular-nums">{taken}</td>
-                    <td className="tabular-nums">{left}</td>
-                    <td className="tabular-nums">{u.submitted ? pct(u.best) : "—"}</td>
+                    <td className="num">{u.attempts}</td>
+                    <td className="num">{taken}</td>
+                    <td className="num">{left}</td>
+                    <td className="num">{u.submitted ? pct(u.best) : "—"}</td>
                   </tr>
                 );
               })}
@@ -115,9 +115,9 @@ export default async function ResultsPage({
 
       <div className="card overflow-hidden p-0">
         <div className="overflow-x-auto">
-        <table className="table">
+        <table className="table compact">
           <thead>
-            <tr><th>Participant</th><th>Attempt</th><th>Started</th><th>Submitted</th><th>Score</th><th>Result</th><th /></tr>
+            <tr><th>Participant</th><th>Assessment</th><th>Attempt</th><th>Submitted</th><th className="num">Score</th><th>Result</th><th className="act"><span className="sr-only">Actions</span></th></tr>
           </thead>
           <tbody>
             {attempts.length === 0 && <tr><td colSpan={7}><EmptyState icon={<ClipboardList />} title="No attempts found">Results will appear here once participants take the assessment.</EmptyState></td></tr>}
@@ -127,20 +127,20 @@ export default async function ResultsPage({
                   <p className="font-medium">{a.user.name}</p>
                   <p className="text-xs text-slate-500">{a.user.email}{a.user.department ? ` · ${a.user.department}` : ""}</p>
                 </td>
+                <td className="min-w-40 font-medium">{a.assessment.title}</td>
                 <td className="whitespace-nowrap">#{a.attemptNo}{a.attemptNo > 1 && <span className="badge ml-2 bg-violet-50 text-violet-700 ring-1 ring-violet-200 ring-inset">Retake {a.attemptNo - 1}</span>}</td>
-                <td className="whitespace-nowrap text-slate-500">{fmtDate(a.startedAt)}</td>
                 <td className="whitespace-nowrap text-slate-500">{fmtDate(a.submittedAt)}</td>
-                <td className="tabular-nums">{a.status === "SUBMITTED" ? `${a.score}/${a.total} (${pct(a.percent)})` : "—"}</td>
+                <td className="num">{a.status === "SUBMITTED" ? `${a.score}/${a.total} (${pct(a.percent)})` : "—"}</td>
                 <td><StatusBadge status={a.status} passed={a.passed} /></td>
-                <td>
+                <td className="act">
                   <div className="flex justify-end gap-2">
                     {a.status === "SUBMITTED" && (
                       <Link href={`/attempt/${a.id}/result`} className="btn-secondary btn-sm"><Eye size={14} /> Review</Link>
                     )}
                     <form action={deleteAttemptAction}>
                       <input type="hidden" name="id" value={a.id} />
-                      <SubmitButton className="btn-secondary btn-sm text-red-600" confirm={`Delete this attempt? ${a.user.name} will get the attempt back and can retake the test.`}>
-                        <RotateCcw size={14} /> Reset
+                      <SubmitButton className="btn-secondary btn-sm text-red-600" title="Reset attempt" confirm={`Delete this attempt? ${a.user.name} will get the attempt back and can retake the test.`}>
+                        <RotateCcw size={14} />
                       </SubmitButton>
                     </form>
                   </div>

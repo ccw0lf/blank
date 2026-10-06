@@ -17,8 +17,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   });
   const iso = (d: Date | null) => (d ? d.toISOString() : "");
   const csv = toCsv([
-    ["Name", "Email", "Department", "Attempt", "Status", "Started", "Submitted", "Score", "Total", "Percent", "Result"],
+    ["Assessment", "Name", "Email", "Department", "Attempt", "Status", "Started", "Submitted", "Score", "Total", "Percent", "Result"],
     ...attempts.map((t) => [
+      a.title,
       t.user.name,
       t.user.email,
       t.user.department,

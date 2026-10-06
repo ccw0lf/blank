@@ -124,31 +124,57 @@ export default async function HistoryPage({
             {all.length ? "Try clearing the filters." : "Your results will appear here after you complete an assessment."}
           </EmptyState>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <ul className="divide-y divide-slate-100 md:hidden">
+            {filtered.map((a) => (
+              <li key={a.id} className="space-y-2 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-900">{a.assessment.title}</p>
+                    {a.assessment.trainingSession && <p className="text-xs text-slate-500">{a.assessment.trainingSession}</p>}
+                  </div>
+                  <StatusBadge status={a.status} passed={a.passed} />
+                </div>
+                <p className="text-xs text-slate-500">
+                  {a.attemptNo > 1 ? `Retake ${a.attemptNo - 1}` : "First attempt"} · {fmtDate(a.submittedAt ?? a.startedAt)} · {fmtDuration(a.startedAt, a.submittedAt)}
+                </p>
+                {a.status === "SUBMITTED" && (
+                  <div>
+                    <p className="text-sm font-semibold tabular-nums">{pct(a.percent)} <span className="font-normal text-slate-500">({a.score}/{a.total})</span></p>
+                    <div className="mt-1"><ProgressBar value={a.percent ?? 0} tone={a.passed ? "green" : "red"} /></div>
+                  </div>
+                )}
+                <Link className="btn-secondary btn-sm" href={a.status === "SUBMITTED" ? `/attempt/${a.id}/result` : `/attempt/${a.id}`}>
+                  <Eye size={14} /> {a.status === "SUBMITTED" ? "Review" : "Resume"}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="table">
               <thead>
-                <tr><th>Assessment</th><th>Attempt</th><th>Date</th><th>Duration</th><th className="min-w-40">Score</th><th>Status</th><th /></tr>
+                <tr><th>Assessment</th><th>Attempt</th><th>Date</th><th className="num">Duration</th><th className="num">Score</th><th>Status</th><th className="act"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody>
                 {filtered.map((a) => (
                   <tr key={a.id}>
-                    <td>
-                      <p className="font-medium">{a.assessment.title}</p>
+                    <td className="min-w-52">
+                      <p className="font-semibold text-slate-900">{a.assessment.title}</p>
                       {a.assessment.trainingSession && <p className="text-xs text-slate-500">{a.assessment.trainingSession}</p>}
                     </td>
                     <td className="whitespace-nowrap text-slate-600">#{a.attemptNo}{a.attemptNo > 1 && <span className="badge ml-2 bg-violet-50 text-violet-700 ring-1 ring-violet-200 ring-inset">Retake {a.attemptNo - 1}</span>}</td>
                     <td className="whitespace-nowrap text-slate-600">{fmtDate(a.submittedAt ?? a.startedAt)}</td>
-                    <td className="whitespace-nowrap text-slate-600">{fmtDuration(a.startedAt, a.submittedAt)}</td>
-                    <td>
+                    <td className="num text-slate-600">{fmtDuration(a.startedAt, a.submittedAt)}</td>
+                    <td className="num">
                       {a.status === "SUBMITTED" ? (
-                        <div>
+                        <div className="ml-auto w-28">
                           <p className="text-sm font-semibold tabular-nums">{pct(a.percent)} <span className="font-normal text-slate-500">({a.score}/{a.total})</span></p>
                           <div className="mt-1"><ProgressBar value={a.percent ?? 0} tone={a.passed ? "green" : "red"} /></div>
                         </div>
                       ) : "—"}
                     </td>
                     <td><StatusBadge status={a.status} passed={a.passed} /></td>
-                    <td className="text-right">
+                    <td className="act">
                       <Link className="btn-secondary btn-sm" href={a.status === "SUBMITTED" ? `/attempt/${a.id}/result` : `/attempt/${a.id}`}>
                         <Eye size={14} /> {a.status === "SUBMITTED" ? "Review" : "Resume"}
                       </Link>
@@ -158,6 +184,7 @@ export default async function HistoryPage({
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
     </>

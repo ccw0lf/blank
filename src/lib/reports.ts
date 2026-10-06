@@ -3,10 +3,11 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { parseOptions } from "./utils";
 
-export const REPORT_TYPES = ["assessments", "participants", "departments", "questions", "retakes"] as const;
+export const REPORT_TYPES = ["results", "assessments", "participants", "departments", "questions", "retakes"] as const;
 export type ReportType = (typeof REPORT_TYPES)[number];
 
 export const REPORT_META: Record<ReportType, { label: string; description: string }> = {
+  results: { label: "All results", description: "Every submission with its assessment title, attempt, retake number and score." },
   assessments: { label: "Assessments", description: "Participation, scores and pass rate for each assessment." },
   participants: { label: "Participants", description: "Every participant's attempts, retakes and scores." },
   departments: { label: "Departments", description: "Performance grouped by department / team." },
@@ -82,6 +83,8 @@ export async function getReport(type: ReportType, f: ReportFilters): Promise<Rep
   if (type === "questions") return questionReport(f);
   const attempts = await loadAttempts(f);
   switch (type) {
+    case "results":
+      return resultsReport(attempts);
     case "assessments":
       return assessmentReport(attempts);
     case "participants":
@@ -100,6 +103,42 @@ function groupBy<T>(items: T[], key: (t: T) => string) {
     m.set(k, [...(m.get(k) ?? []), i]);
   }
   return m;
+}
+
+function resultsReport(attempts: AttemptRow[]): Report {
+  const rows = [...attempts]
+    .sort((a, b) => (b.submittedAt?.getTime() ?? 0) - (a.submittedAt?.getTime() ?? 0))
+    .map(
+      (a) =>
+        [
+          a.assessment.title,
+          a.user.name,
+          a.user.email,
+          a.user.department,
+          a.attemptNo,
+          a.attemptNo > 1 ? `Retake ${a.attemptNo - 1}` : "First attempt",
+          a.submittedAt ? a.submittedAt.toISOString().slice(0, 16).replace("T", " ") : null,
+          `${a.score ?? 0}/${a.total}`,
+          round1(a.percent ?? 0),
+          a.passed ? "Passed" : "Failed",
+        ] as Cell[],
+    );
+  return {
+    type: "results",
+    columns: [
+      { label: "Assessment" },
+      { label: "Participant" },
+      { label: "Email" },
+      { label: "Department" },
+      { label: "Attempt", kind: "num" },
+      { label: "Type" },
+      { label: "Submitted" },
+      { label: "Score" },
+      { label: "Score %", kind: "pct" },
+      { label: "Result" },
+    ],
+    rows,
+  };
 }
 
 function assessmentReport(attempts: AttemptRow[]): Report {

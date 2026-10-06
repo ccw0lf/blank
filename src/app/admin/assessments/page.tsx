@@ -32,7 +32,7 @@ export default async function AssessmentsPage() {
           <div className="overflow-x-auto">
             <table className="table">
               <thead>
-                <tr><th>Assessment</th><th>Pool → per student</th><th>Submissions</th><th>Created</th><th>Status</th><th /></tr>
+                <tr><th>Assessment</th><th className="num">Pool → per student</th><th className="num">Submissions</th><th>Created</th><th>Status</th><th className="act"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody>
                 {list.map((a) => (
@@ -41,14 +41,14 @@ export default async function AssessmentsPage() {
                       <Link href={`/admin/assessments/${a.id}`} className="font-medium hover:text-brand-600">{a.title}</Link>
                       {a.trainingSession && <p className="text-xs text-slate-500">{a.trainingSession}</p>}
                     </td>
-                    <td className="tabular-nums">
+                    <td className="num">
                       {a._count.questions} → {a.questionsPerAttempt}
                       {a._count.questions < a.questionsPerAttempt && <span className="badge ml-2 bg-amber-50 text-amber-700 ring-1 ring-amber-200 ring-inset">pool too small</span>}
                     </td>
-                    <td className="tabular-nums">{a._count.attempts}</td>
+                    <td className="num">{a._count.attempts}</td>
                     <td className="whitespace-nowrap text-slate-500">{fmtDate(a.createdAt)}</td>
                     <td><PublishBadge live={a.isPublished} /></td>
-                    <td>
+                    <td className="act">
                       <div className="flex justify-end gap-2">
                         <CopyLink compact url={`${base}/a/${a.slug}`} />
                         <Link href={`/admin/assessments/${a.id}`} className="btn-secondary btn-sm"><Settings2 size={14} /> Manage</Link>

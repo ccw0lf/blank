@@ -109,13 +109,13 @@ export default async function AdminDashboard() {
           ) : (
             <div className="overflow-x-auto">
               <table className="table">
-                <thead><tr><th>Title</th><th>Submissions</th><th>Avg</th><th>Status</th></tr></thead>
+                <thead><tr><th>Title</th><th className="num">Submissions</th><th className="num">Avg</th><th>Status</th></tr></thead>
                 <tbody>
                   {list.map((a) => (
                     <tr key={a.id}>
                       <td><Link href={`/admin/assessments/${a.id}`} className="font-medium hover:text-brand-600">{a.title}</Link></td>
-                      <td className="tabular-nums">{a._count.attempts}</td>
-                      <td className="tabular-nums">{pct(avgMap.get(a.id))}</td>
+                      <td className="num">{a._count.attempts}</td>
+                      <td className="num">{pct(avgMap.get(a.id))}</td>
                       <td><PublishBadge live={a.isPublished} /></td>
                     </tr>
                   ))}

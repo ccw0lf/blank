@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { PrintButton } from "@/components/PrintButton";
 
 const TAB_ICONS: Record<ReportType, React.ReactNode> = {
+  results: <FileBarChart size={16} />,
   assessments: <ClipboardList size={16} />,
   participants: <Users size={16} />,
   departments: <Building2 size={16} />,
@@ -36,7 +37,7 @@ export default async function ReportsPage({
   searchParams: Promise<{ tab?: string; assessment?: string; from?: string; to?: string }>;
 }) {
   const sp = await searchParams;
-  const tab: ReportType = REPORT_TYPES.includes(sp.tab as ReportType) ? (sp.tab as ReportType) : "assessments";
+  const tab: ReportType = REPORT_TYPES.includes(sp.tab as ReportType) ? (sp.tab as ReportType) : "results";
   const filters = { assessmentId: sp.assessment || undefined, from: sp.from || undefined, to: sp.to || undefined };
 
   const [assessments, summary, report] = await Promise.all([
@@ -58,15 +59,18 @@ export default async function ReportsPage({
 
   const cell = (v: Cell, kind: string | undefined, label: string) => {
     if (v === null || v === "") return <span className="text-slate-400">—</span>;
-    if (kind === "pct" && typeof v === "number")
+    if (kind === "pct" && typeof v === "number") {
+      const primary = /^(Avg|Pass|Correct|Score)/.test(label);
+      if (!primary) return <span className="tabular-nums">{v}%</span>;
       return (
-        <div className="min-w-20">
+        <div className="ml-auto w-20">
           <span className="tabular-nums">{v}%</span>
           <div className="mt-1">
-            <ProgressBar value={v} tone={label.startsWith("Correct") || label.startsWith("Avg") || label.startsWith("Pass") ? (v >= 60 ? "green" : "red") : "brand"} />
+            <ProgressBar value={v} tone={v >= 60 ? "green" : "red"} />
           </div>
         </div>
       );
+    }
     if (kind === "num" && typeof v === "number") {
       if (label.startsWith("Change")) return <span className={cn("tabular-nums", v > 0 ? "text-emerald-600" : v < 0 ? "text-red-600" : "")}>{v > 0 ? "+" : ""}{v}</span>;
       return <span className="tabular-nums">{v}</span>;
@@ -151,15 +155,15 @@ export default async function ReportsPage({
           </EmptyState>
         ) : (
           <div className="overflow-x-auto">
-            <table className="table">
+            <table className="table compact">
               <thead>
-                <tr>{report.columns.map((c) => <th key={c.label} className={c.kind === "num" || c.kind === "pct" ? "whitespace-nowrap" : ""}>{c.label}</th>)}</tr>
+                <tr>{report.columns.map((c) => <th key={c.label} className={c.kind === "num" || c.kind === "pct" ? "num" : ""}>{c.label}</th>)}</tr>
               </thead>
               <tbody>
                 {report.rows.map((r, i) => (
                   <tr key={i}>
                     {r.map((v, ci) => (
-                      <td key={ci} className={cn(report.columns[ci].label === "Question" && "max-w-md")}>{cell(v, report.columns[ci].kind, report.columns[ci].label)}</td>
+                      <td key={ci} className={cn(report.columns[ci].kind === "num" || report.columns[ci].kind === "pct" ? "num" : report.columns[ci].label === "Question" ? "max-w-md min-w-64" : "")}>{cell(v, report.columns[ci].kind, report.columns[ci].label)}</td>
                     ))}
                   </tr>
                 ))}
