@@ -40,3 +40,15 @@ export function availability(a: {
   if (a.endsAt && now > a.endsAt) return { open: false, reason: `Closed on ${fmtDate(a.endsAt)}.` };
   return { open: true };
 }
+
+export function fmtDateShort(d: Date | string | null | undefined) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+export function fmtDuration(from: Date, to: Date | null) {
+  if (!to) return "—";
+  const s = Math.max(0, Math.round((to.getTime() - from.getTime()) / 1000));
+  const m = Math.floor(s / 60);
+  return m >= 1 ? `${m} min` : `${s} sec`;
+}

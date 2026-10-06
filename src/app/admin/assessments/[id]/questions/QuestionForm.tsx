@@ -1,5 +1,6 @@
 "use client";
 import { useActionState, useEffect, useRef, useState } from "react";
+import { Plus, Save } from "lucide-react";
 import { saveQuestionAction } from "@/app/actions/admin";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -53,7 +54,7 @@ export function QuestionForm({
         ))}
         {count < 8 && (
           <button type="button" className="text-sm text-brand-600 hover:underline" onClick={() => setCount((c) => c + 1)}>
-            + Add option
+            <Plus size={14} className="mr-0.5 inline" />Add option
           </button>
         )}
       </div>
@@ -71,7 +72,7 @@ export function QuestionForm({
         </div>
       </div>
       <FormMessage state={state} />
-      <SubmitButton pendingText="Saving…">{question ? "Save changes" : "Add question"}</SubmitButton>
+      <SubmitButton pendingText="Saving…">{question ? <><Save size={16} /> Save changes</> : <><Plus size={16} /> Add question</>}</SubmitButton>
     </ActionForm>
   );
 }

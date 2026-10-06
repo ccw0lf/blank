@@ -1,6 +1,7 @@
 "use client";
 import { useContext } from "react";
 import { useFormStatus } from "react-dom";
+import { Loader2 } from "lucide-react";
 import { PendingContext } from "./ActionForm";
 
 export function SubmitButton({
@@ -26,7 +27,13 @@ export function SubmitButton({
         if (confirm && !window.confirm(confirm)) e.preventDefault();
       }}
     >
-      {pending ? pendingText ?? "Working…" : children}
+      {pending ? (
+        <>
+          <Loader2 size={16} className="animate-spin" /> {pendingText ?? "Working…"}
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }

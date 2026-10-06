@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertCircle, CheckCircle2, ClipboardCheck, Clock, Loader2, Send } from "lucide-react";
 import { saveAnswerAction, submitAttemptAction } from "@/app/actions/quiz";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +102,9 @@ export function QuizRunner({
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3">
+          <span className="hidden h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-600 text-white sm:grid">
+            <ClipboardCheck size={18} />
+          </span>
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold">{title}</p>
             <div className="mt-1 flex items-center gap-2">
@@ -123,19 +127,23 @@ export function QuizRunner({
               )}
               aria-live="polite"
             >
-              {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
+              <span className="inline-flex items-center gap-1.5">
+                <Clock size={15} />
+                {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
+              </span>
             </div>
           )}
           <button className="btn-primary" disabled={submitting} onClick={() => submit(false)}>
-            {submitting ? "Submitting…" : "Submit"}
+            {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            <span className="hidden sm:inline">{submitting ? "Submitting…" : "Submit"}</span>
           </button>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl space-y-4 px-4 py-6 select-none">
         {error && (
-          <div className="flex items-start justify-between rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
+          <div role="alert" className="flex items-start justify-between gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700 ring-1 ring-red-200 ring-inset">
+            <span className="flex gap-2"><AlertCircle size={16} className="mt-0.5 shrink-0" />{error}</span>
             <button className="ml-4 font-medium" onClick={() => setError(null)}>Dismiss</button>
           </div>
         )}
@@ -163,7 +171,15 @@ export function QuizRunner({
                 <span className="whitespace-pre-line">{q.text}</span>
               </p>
               <span className="text-xs whitespace-nowrap text-slate-400">
-                {saving[q.id] === "saving" ? "Saving…" : saving[q.id] === "error" ? "Not saved" : answers[q.id] !== null ? "Saved" : ""}
+                {saving[q.id] === "saving" ? (
+                  "Saving…"
+                ) : saving[q.id] === "error" ? (
+                  "Not saved"
+                ) : answers[q.id] !== null ? (
+                  <span className="inline-flex items-center gap-1 text-emerald-600"><CheckCircle2 size={13} /> Saved</span>
+                ) : (
+                  ""
+                )}
               </span>
             </div>
             <div className="mt-4 space-y-2" role="radiogroup">
@@ -203,6 +219,7 @@ export function QuizRunner({
 
         <div className="flex justify-end pb-10">
           <button className="btn-primary" disabled={submitting} onClick={() => submit(false)}>
+            {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
             {submitting ? "Submitting…" : "Submit assessment"}
           </button>
         </div>

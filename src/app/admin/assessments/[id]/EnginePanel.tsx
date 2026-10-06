@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { Loader2, Play } from "lucide-react";
 import { simulateAction } from "@/app/actions/admin";
 
 type Result = Awaited<ReturnType<typeof simulateAction>>;
@@ -20,7 +21,7 @@ export function EnginePanel({ assessmentId }: { assessmentId: string }) {
           disabled={pending}
           onClick={() => start(async () => setResult(await simulateAction(assessmentId, students)))}
         >
-          {pending ? "Running…" : "Run simulation"}
+          {pending ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />} {pending ? "Running…" : "Run simulation"}
         </button>
       </div>
       {result && "error" in result && <p className="text-sm text-red-700">{result.error}</p>}

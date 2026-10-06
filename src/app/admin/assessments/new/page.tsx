@@ -1,9 +1,10 @@
 import { AssessmentForm } from "@/components/AssessmentForm";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function NewAssessment() {
   return (
-    <div className="mx-auto max-w-4xl">
-      <h1 className="mb-6 text-2xl font-semibold">New assessment</h1>
+    <div className="max-w-4xl">
+      <PageHeader back={{ href: "/admin/assessments", label: "Assessments" }} title="New assessment" description="Set the rules first. You'll add questions on the next step." />
       <AssessmentForm />
     </div>
   );

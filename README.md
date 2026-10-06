@@ -53,6 +53,10 @@ Run `npm run engine:check` for a quick command-line simulation. Sample output: 1
 
 The engine warns you when the pool is too small. If the pool has the same number of questions as the paper, every student gets the same questions in a different order.
 
+## Participant area
+
+A sidebar layout with **Dashboard** (stats, score trend, pass-rate ring, recent results, what to do next), **Assessments** (every published quiz with progress, attempts left and best score), **My Results** (full history with filters, per-assessment progress and a score progression chart) and **Profile** (edit details, change password). Admins get the same sidebar layout with Overview, Assessments and Users.
+
 ## Other features
 
 - Role-based auth (bcrypt-hashed passwords, signed HTTP-only JWT cookie). Admins can promote other users.
@@ -64,7 +68,7 @@ The engine warns you when the pool is too small. If the pool has the same number
 
 ## Tech stack
 
-Next.js 16 (App Router, Server Actions) · React 19 · TypeScript · Prisma 6 · SQLite · Tailwind CSS 4 · Zod · jose · bcryptjs
+Next.js 16 (App Router, Server Actions) · React 19 · TypeScript · Prisma 6 · SQLite · Tailwind CSS 4 · lucide-react icons · Zod · jose · bcryptjs
 
 ### Production
 
@@ -82,9 +86,9 @@ src/lib/engine.ts             randomization engine (pure, testable)
 src/lib/quiz.ts               start/resume attempt, save answer, grade
 src/lib/auth.ts               sessions & guards
 src/lib/csv.ts                CSV import/export
-src/app/a/[slug]              assessment landing (the shared link)
 src/app/attempt/[id]          quiz runner + result page
-src/app/dashboard             participant's results
+src/app/(user)/...            participant area: dashboard, assessments, history, profile, /a/<slug>, results
+src/components/Shell.tsx      sidebar layout shared by the admin and participant panels
 src/app/admin/...             admin dashboard, assessments, questions, results, users
 src/app/actions/              server actions
 ```

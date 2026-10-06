@@ -1,3 +1,4 @@
+import { Copy, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { AssessmentForm } from "@/components/AssessmentForm";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -20,17 +21,17 @@ export default async function SettingsPage({ params }: { params: Promise<{ id: s
         poolSize={pool}
         initial={{ ...a, startsAt: toLocalInput(a.startsAt), endsAt: toLocalInput(a.endsAt) }}
       />
-      <section className="card space-y-4">
+      <section className="card space-y-4 border-red-100">
         <h2 className="font-semibold">More actions</h2>
         <div className="flex flex-wrap gap-3">
           <form action={duplicateAssessmentAction}>
             <input type="hidden" name="id" value={a.id} />
-            <SubmitButton className="btn-secondary">Duplicate for a new session</SubmitButton>
+            <SubmitButton className="btn-secondary"><Copy size={16} /> Duplicate for a new session</SubmitButton>
           </form>
           <form action={deleteAssessmentAction}>
             <input type="hidden" name="id" value={a.id} />
             <SubmitButton className="btn-danger" confirm="Delete this assessment, all its questions and all results? This cannot be undone.">
-              Delete assessment
+              <Trash2 size={16} /> Delete assessment
             </SubmitButton>
           </form>
         </div>

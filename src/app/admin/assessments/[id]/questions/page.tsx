@@ -1,3 +1,4 @@
+import { CheckCircle2, FileUp, Pencil, Plus, Power, PowerOff, Trash2, Layers } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { cn, parseOptions, pct } from "@/lib/utils";
 import { deleteQuestionAction, toggleQuestionAction } from "@/app/actions/admin";
@@ -41,25 +42,25 @@ export default async function QuestionsPage({
   return (
     <div className="space-y-6">
       {created && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          Assessment created. Now add questions by hand or import a CSV, then publish it.
+        <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800 ring-1 ring-emerald-200 ring-inset">
+          <CheckCircle2 size={16} /> Assessment created. Now add questions by hand or import a CSV, then publish it.
         </p>
       )}
       <div
         className={cn(
-          "rounded-lg px-3 py-2 text-sm",
-          active > a.questionsPerAttempt ? "bg-slate-100 text-slate-700" : "bg-amber-50 text-amber-800",
+          "flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm ring-1 ring-inset",
+          active > a.questionsPerAttempt ? "bg-white text-slate-700 ring-slate-200" : "bg-amber-50 text-amber-800 ring-amber-200",
         )}
       >
-        <b>{active}</b> active question(s) in the pool · <b>{a.questionsPerAttempt}</b> randomly picked for each student.
-        {active <= a.questionsPerAttempt && " Add more questions than the per-student count so students get different sets."}
+        <Layers size={16} className="mt-0.5 shrink-0" /><span><b>{active}</b> active question(s) in the pool · <b>{a.questionsPerAttempt}</b> randomly picked for each student.
+        {active <= a.questionsPerAttempt && " Add more questions than the per-student count so students get different sets."}</span>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Collapsible title="Add a question" defaultOpen={questions.length === 0}>
+        <Collapsible title={<span className="inline-flex items-center gap-2"><Plus size={18} className="text-brand-600" /> Add a question</span>} defaultOpen={questions.length === 0}>
           <QuestionForm assessmentId={id} topics={topics} />
         </Collapsible>
-        <Collapsible title="Bulk upload (CSV)" defaultOpen={questions.length === 0}>
+        <Collapsible title={<span className="inline-flex items-center gap-2"><FileUp size={18} className="text-brand-600" /> Bulk upload (CSV)</span>} defaultOpen={questions.length === 0}>
           <UploadForm assessmentId={id} />
         </Collapsible>
       </div>
@@ -110,7 +111,7 @@ export default async function QuestionsPage({
                 <div className="flex gap-2">
                   <form action={toggleQuestionAction}>
                     <input type="hidden" name="id" value={q.id} />
-                    <SubmitButton className="btn-secondary btn-sm">{q.isActive ? "Deactivate" : "Activate"}</SubmitButton>
+                    <SubmitButton className="btn-secondary btn-sm">{q.isActive ? <><PowerOff size={14} /> Deactivate</> : <><Power size={14} /> Activate</>}</SubmitButton>
                   </form>
                   <form action={deleteQuestionAction}>
                     <input type="hidden" name="id" value={q.id} />
@@ -118,13 +119,13 @@ export default async function QuestionsPage({
                       className="btn-secondary btn-sm text-red-600"
                       confirm={q.timesServed > 0 ? "Students have already seen this question, so it will be deactivated instead of deleted. Continue?" : "Delete this question?"}
                     >
-                      Delete
+                      <Trash2 size={14} /> Delete
                     </SubmitButton>
                   </form>
                 </div>
               </div>
               <Collapsible
-                title={<span className="text-sm font-normal text-brand-600">Edit</span>}
+                title={<span className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600"><Pencil size={14} /> Edit</span>}
                 className="mt-3 border-t border-slate-100 pt-3"
               >
                 <QuestionForm assessmentId={id} topics={topics} question={{ ...q, options: opts }} />

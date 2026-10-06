@@ -1,5 +1,6 @@
 "use client";
 import { useActionState } from "react";
+import { ArrowRight, Save } from "lucide-react";
 import { createAssessmentAction, updateAssessmentAction } from "@/app/actions/admin";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -89,7 +90,7 @@ export function AssessmentForm({ initial, poolSize }: { initial?: Values; poolSi
       </section>
 
       <FormMessage state={state} />
-      <SubmitButton pendingText="Saving…">{editing ? "Save settings" : "Create & add questions →"}</SubmitButton>
+      <SubmitButton pendingText="Saving…">{editing ? <><Save size={16} /> Save settings</> : <>Create &amp; add questions <ArrowRight size={16} /></>}</SubmitButton>
     </ActionForm>
   );
 }

@@ -1,8 +1,10 @@
+import { Award, BarChart3, CheckCircle2, Dices, Settings2, Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { finalizeExpired } from "@/lib/quiz";
 import { combinations } from "@/lib/engine";
 import { fmtDate, pct } from "@/lib/utils";
 import { Stat } from "@/components/Stat";
+import { BarChart } from "@/components/Charts";
 import { EnginePanel } from "./EnginePanel";
 
 export default async function AssessmentOverview({ params }: { params: Promise<{ id: string }> }) {
@@ -39,10 +41,10 @@ export default async function AssessmentOverview({ params }: { params: Promise<{
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Stat label="Participants" value={participants.length} hint={`${inProgress} currently taking it`} />
-        <Stat label="Submissions" value={submitted} />
-        <Stat label="Average score" value={pct(agg._avg.percent)} hint={submitted ? `min ${pct(agg._min.percent)} · max ${pct(agg._max.percent)}` : undefined} />
-        <Stat label="Pass rate" value={submitted ? pct((passed / submitted) * 100) : "—"} hint={`pass mark ${a.passPercent}%`} />
+        <Stat label="Participants" value={participants.length} icon={<Users />} tone="brand" hint={`${inProgress} currently taking it`} />
+        <Stat label="Submissions" value={submitted} icon={<CheckCircle2 />} tone="green" />
+        <Stat label="Average score" value={pct(agg._avg.percent)} icon={<BarChart3 />} tone="violet" hint={submitted ? `min ${pct(agg._min.percent)} · max ${pct(agg._max.percent)}` : undefined} />
+        <Stat label="Pass rate" value={submitted ? pct((passed / submitted) * 100) : "—"} icon={<Award />} tone="amber" hint={`pass mark ${a.passPercent}%`} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -51,24 +53,21 @@ export default async function AssessmentOverview({ params }: { params: Promise<{
           {submitted === 0 ? (
             <p className="mt-6 text-sm text-slate-500">No submissions yet.</p>
           ) : (
-            <div className="mt-4 flex items-end gap-1.5">
-              {buckets.map((b) => (
-                <div key={b.label} className="flex flex-1 flex-col items-center gap-1">
-                  <span className="text-xs text-slate-500 tabular-nums">{b.n || ""}</span>
-                  <div
-                    className={`w-full rounded-t ${parseInt(b.label) + 9 >= a.passPercent ? "bg-emerald-500" : "bg-red-400"}`}
-                    style={{ height: b.n ? Math.max(4, (b.n / maxBucket) * 140) : 0 }}
-                    title={`${b.label}%: ${b.n}`}
-                  />
-                  <span className="text-[10px] text-slate-400">{b.label.split("–")[0]}%</span>
-                </div>
-              ))}
+            <div className="mt-4">
+              <BarChart
+                data={buckets.map((b) => ({
+                  label: `${b.label.split("–")[0]}%`,
+                  value: b.n,
+                  title: `${b.label}%: ${b.n}`,
+                  barClass: parseInt(b.label) + 9 >= a.passPercent ? "bg-emerald-500" : "bg-red-400",
+                }))}
+              />
             </div>
           )}
         </section>
 
         <section className="card space-y-3 text-sm">
-          <h2 className="font-semibold">Configuration</h2>
+          <h2 className="flex items-center gap-2 font-semibold"><Settings2 size={18} className="text-slate-400" /> Configuration</h2>
           <Row k="Questions per student" v={`${k} of ${pool} active in the pool`} />
           <Row k="Time limit" v={a.durationMinutes ? `${a.durationMinutes} minutes` : "None"} />
           <Row k="Attempts allowed" v={a.maxAttempts} />
@@ -80,7 +79,7 @@ export default async function AssessmentOverview({ params }: { params: Promise<{
 
       <section className="card space-y-4">
         <div>
-          <h2 className="font-semibold">Randomization engine</h2>
+          <h2 className="flex items-center gap-2 font-semibold"><Dices size={18} className="text-slate-400" /> Randomization engine</h2>
           <p className="mt-1 text-sm text-slate-600">
             Each student gets <b>{Math.min(k, pool)}</b> questions from the pool of <b>{pool}</b>. The engine picks the
             least-used questions first (so students next to each other get mostly different papers), spreads picks
@@ -88,15 +87,15 @@ export default async function AssessmentOverview({ params }: { params: Promise<{
           </p>
         </div>
         {pool < k ? (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700 ring-1 ring-red-200 ring-inset">
             The pool has only {pool} active question(s) but {k} are required per student. Students will get all {pool}. Add more questions.
           </p>
         ) : pool === k ? (
-          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <p className="rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-800 ring-1 ring-amber-200 ring-inset">
             Pool size equals questions per student, so every student gets the same questions (only the order changes). Add more questions to get different sets.
           </p>
         ) : (
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          <p className="rounded-lg bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800 ring-1 ring-emerald-200 ring-inset">
             {combos === Infinity ? "More than 9 quadrillion" : combos.toLocaleString()} different question sets are possible.
           </p>
         )}

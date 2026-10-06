@@ -1,5 +1,6 @@
 "use client";
 import { useActionState } from "react";
+import { PlayCircle } from "lucide-react";
 import { startAttemptAction } from "@/app/actions/quiz";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -11,7 +12,7 @@ export function StartForm({ assessmentId, label }: { assessmentId: string; label
       <input type="hidden" name="assessmentId" value={assessmentId} />
       <FormMessage state={state} />
       <SubmitButton className="btn-primary w-full sm:w-auto" pendingText="Preparing your questions…">
-        {label}
+        <PlayCircle size={16} /> {label}
       </SubmitButton>
     </form>
   );

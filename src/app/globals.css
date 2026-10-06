@@ -1,27 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #dbe6fe;
-  --color-brand-500: #3b6cf6;
-  --color-brand-600: #2553e0;
-  --color-brand-700: #1d41b4;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-brand-50: #eef3ff;
+  --color-brand-100: #dde7ff;
+  --color-brand-200: #c0d0ff;
+  --color-brand-500: #3d66f2;
+  --color-brand-600: #2b52d9;
+  --color-brand-700: #2142b3;
+  --color-ink: #0f172a;
 }
 
-@utility card { @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm; }
-@utility btn { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50; }
-@utility btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
-@utility btn-secondary { @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50; }
-@utility btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
-@utility btn-sm { @apply px-3 py-1.5 text-xs; }
-@utility input { @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100; }
-@utility label { @apply mb-1 block text-sm font-medium text-slate-700; }
-@utility badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+@utility card { @apply rounded-xl border border-slate-200 bg-white p-5 shadow-xs; }
+@utility btn { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50; }
+@utility btn-primary { @apply btn bg-brand-600 text-white shadow-xs hover:bg-brand-700; }
+@utility btn-secondary { @apply btn border border-slate-300 bg-white text-slate-700 shadow-xs hover:bg-slate-50; }
+@utility btn-danger { @apply btn bg-red-600 text-white shadow-xs hover:bg-red-700; }
+@utility btn-sm { @apply gap-1.5 px-3 py-1.5 text-xs; }
+@utility input { @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-xs outline-none placeholder:text-slate-400 focus:border-brand-500 focus:ring-3 focus:ring-brand-100; }
+@utility label { @apply mb-1.5 block text-sm font-medium text-slate-700; }
+@utility badge { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium; }
 
 @layer components {
   .table { @apply w-full text-left text-sm; }
-  .table th { @apply border-b border-slate-200 px-3 py-2 text-xs font-semibold tracking-wide text-slate-500 uppercase; }
-  .table td { @apply border-b border-slate-100 px-3 py-2 align-top; }
+  .table th { @apply border-b border-slate-200 bg-slate-50/70 px-4 py-2.5 text-xs font-semibold tracking-wide text-slate-500 uppercase first:rounded-tl-xl last:rounded-tr-xl; }
+  .table td { @apply border-b border-slate-100 px-4 py-3 align-middle; }
+  .table tbody tr:last-child td { @apply border-b-0; }
+  .table tbody tr:hover td { @apply bg-slate-50/60; }
 }
 
-body { @apply bg-slate-50 text-slate-900 antialiased; }
+body { @apply bg-slate-50 font-sans text-slate-900 antialiased; }

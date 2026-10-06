@@ -1,6 +1,7 @@
 "use client";
 import { useActionState } from "react";
 import Link from "next/link";
+import { LogIn, UserPlus } from "lucide-react";
 import { loginAction, registerAction } from "@/app/actions/auth";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -41,6 +42,7 @@ export function AuthForm({ mode, next }: { mode: "login" | "register"; next?: st
       </div>
       <FormMessage state={state} />
       <SubmitButton className="btn-primary w-full" pendingText={mode === "login" ? "Signing in…" : "Creating account…"}>
+        {mode === "login" ? <LogIn size={16} /> : <UserPlus size={16} />}
         {mode === "login" ? "Log in" : "Create account"}
       </SubmitButton>
       <p className="text-center text-sm text-slate-600">

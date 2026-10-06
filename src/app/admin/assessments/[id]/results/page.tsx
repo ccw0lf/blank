@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { Download, Eye, Filter, RotateCcw, Search } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { finalizeExpired } from "@/lib/quiz";
 import { cn, fmtDate, pct } from "@/lib/utils";
 import { deleteAttemptAction } from "@/app/actions/admin";
 import { SubmitButton } from "@/components/SubmitButton";
+import { StatusBadge } from "@/components/StatusBadge";
+import { EmptyState } from "@/components/EmptyState";
+import { ClipboardList } from "lucide-react";
 
 export default async function ResultsPage({
   params,
@@ -45,25 +49,29 @@ export default async function ResultsPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <form className="flex flex-wrap gap-2">
-          <input name="q" defaultValue={q} placeholder="Search name or email" className="input w-56" />
+          <div className="relative">
+            <Search size={16} className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400" />
+            <input name="q" defaultValue={q} placeholder="Search name or email" className="input w-64 pl-9" />
+          </div>
           <select name="status" defaultValue={status ?? ""} className="input w-40">
             <option value="">All</option>
             <option value="passed">Passed</option>
             <option value="failed">Failed</option>
             <option value="progress">In progress</option>
           </select>
-          <button className="btn-secondary">Filter</button>
+          <button className="btn-secondary"><Filter size={16} /> Filter</button>
         </form>
-        <a href={`/api/admin/assessments/${id}/export`} className="btn-primary">Export CSV</a>
+        <a href={`/api/admin/assessments/${id}/export`} className="btn-primary"><Download size={16} /> Export CSV</a>
       </div>
 
-      <div className="card overflow-x-auto p-0">
+      <div className="card overflow-hidden p-0">
+        <div className="overflow-x-auto">
         <table className="table">
           <thead>
             <tr><th>Participant</th><th>Attempt</th><th>Started</th><th>Submitted</th><th>Score</th><th>Result</th><th /></tr>
           </thead>
           <tbody>
-            {attempts.length === 0 && <tr><td colSpan={7} className="py-10 text-center text-slate-500">No attempts found.</td></tr>}
+            {attempts.length === 0 && <tr><td colSpan={7}><EmptyState icon={<ClipboardList />} title="No attempts found">Results will appear here once participants take the assessment.</EmptyState></td></tr>}
             {attempts.map((a) => (
               <tr key={a.id}>
                 <td>
@@ -74,24 +82,16 @@ export default async function ResultsPage({
                 <td className="whitespace-nowrap text-slate-500">{fmtDate(a.startedAt)}</td>
                 <td className="whitespace-nowrap text-slate-500">{fmtDate(a.submittedAt)}</td>
                 <td className="tabular-nums">{a.status === "SUBMITTED" ? `${a.score}/${a.total} (${pct(a.percent)})` : "—"}</td>
-                <td>
-                  {a.status !== "SUBMITTED" ? (
-                    <span className="badge bg-sky-100 text-sky-800">In progress</span>
-                  ) : a.passed ? (
-                    <span className="badge bg-emerald-100 text-emerald-800">Passed</span>
-                  ) : (
-                    <span className="badge bg-red-100 text-red-800">Failed</span>
-                  )}
-                </td>
+                <td><StatusBadge status={a.status} passed={a.passed} /></td>
                 <td>
                   <div className="flex justify-end gap-2">
                     {a.status === "SUBMITTED" && (
-                      <Link href={`/attempt/${a.id}/result`} className="btn-secondary btn-sm">Review</Link>
+                      <Link href={`/attempt/${a.id}/result`} className="btn-secondary btn-sm"><Eye size={14} /> Review</Link>
                     )}
                     <form action={deleteAttemptAction}>
                       <input type="hidden" name="id" value={a.id} />
                       <SubmitButton className="btn-secondary btn-sm text-red-600" confirm={`Delete this attempt? ${a.user.name} will get the attempt back and can retake the test.`}>
-                        Reset
+                        <RotateCcw size={14} /> Reset
                       </SubmitButton>
                     </form>
                   </div>
@@ -100,6 +100,7 @@ export default async function ResultsPage({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <section className="card">
